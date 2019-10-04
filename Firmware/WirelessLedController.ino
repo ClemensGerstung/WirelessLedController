@@ -18,9 +18,7 @@ enum Codes : uint8_t
 
 WiFiServer server(PORT);
 
-#if defined(ADAFRUIT_NEOPIXEL_H)
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_MODE);
-#endif
 
 void setup()
 {
@@ -37,11 +35,10 @@ void setup()
 	Serial.print("Connected to WiFi. IP: ");
 	Serial.println(WiFi.localIP());
 
+
 	server.begin();
 
-#if defined(ADAFRUIT_NEOPIXEL_H)
 	strip.begin();
-#endif
 }
 
 void loop()
@@ -50,12 +47,15 @@ void loop()
 
 	if (client)
 	{
+		Serial.println(client.remoteIP());
 		while (client.connected())
 		{
 			while (client.available() > 0)
 			{
 				uint8_t code;
 				int read = client.read(&code, 1);
+				Serial.print("Code: ");
+				Serial.println(code);
 
 				if (read == 1)
 				{
@@ -68,7 +68,6 @@ void loop()
 					}
 					else if (code == Codes::GET_LED)
 					{
-#if defined(ADAFRUIT_NEOPIXEL_H)
 						uint16_t index;
 						uint8_t data[4];
 
@@ -79,19 +78,20 @@ void loop()
 						Serial.println(index);
 
 						uint32_t color = strip.getPixelColor(index);
-						data[0] = color >> 24;
-						data[1] = color >> 16;
-						data[2] = color >> 8;
-						data[3] = color;
+						data[3] = color >> 24;
+						data[0] = color >> 16;
+						data[1] = color >> 8;
+						data[2] = color;
+
+						Serial.print(color, HEX);
+						Serial.println();
 
 						client.write(data, 4);
-#endif
 					}
 					else if(code == Codes::GET_LEDS)
 					{
-#if defined(ADAFRUIT_NEOPIXEL_H)
 						uint16_t from, to;
-						uint8_t data[6];
+						uint8_t data[4];
 
 						// TODO: check read bytes
 						client.read(data, 4);
@@ -104,44 +104,43 @@ void loop()
 						// no boundaries check if on strip
 						for(uint16_t index = from; index <= to; index++)
 						{
-							data[0] = index >> 8;
-							data[1] = index;
-
 							uint32_t color = strip.getPixelColor(index);
-							data[2] = color >> 24;
-							data[3] = color >> 16;
-							data[4] = color >> 8;
-							data[5] = color;
+							data[3] = color >> 24;
+							data[0] = color >> 16;
+							data[1] = color >> 8;
+							data[2] = color;
 
-							client.write(data, 6);
+							client.write(data, 4);
 						}
-#endif
 					}
 					else if(code == Codes::GET_BRIGHTNESS)
 					{
-#if defined(ADAFRUIT_NEOPIXEL_H)
 						uint8_t b = strip.getBrightness();
 						client.write(&b, 1);
-#endif
 					}
 					else if(code == Codes::SET_LED)
 					{
-#if defined(ADAFRUIT_NEOPIXEL_H)
 						uint16_t index;
 						uint8_t data[6];
 
 						// TODO: check read bytes
 						client.read(data, 6);
 
+						Serial.print(data[0], HEX);
+						Serial.print(data[1], HEX);
+						Serial.print(data[2], HEX);
+						Serial.print(data[3], HEX);
+						Serial.print(data[4], HEX);
+						Serial.print(data[5], HEX);
+						Serial.println();
+
 						index = data[0] << 8 | data[1];
 
 						strip.setPixelColor(index, data[2], data[3], data[4], data[5]);
 						strip.show();
-#endif
 					}
 					else if(code == Codes::SET_LEDS)
 					{
-#if defined(ADAFRUIT_NEOPIXEL_H)
 						uint16_t from, to;
 						uint8_t data[4];
 
@@ -160,16 +159,13 @@ void loop()
 						}
 
 						strip.show();
-#endif
 					}
 					else if(code == Codes::SET_BRIGHTNESS)
 					{
-#if defined(ADAFRUIT_NEOPIXEL_H)
 						uint8_t b;
 						client.read(&b, 1);
 						strip.setBrightness(b);
 						strip.show();
-#endif
 					}
 				}
 			}
