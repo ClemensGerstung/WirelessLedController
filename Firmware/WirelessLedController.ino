@@ -1,8 +1,9 @@
-#include "Arduino.h"
+// #define USE_ADAFRUIT_NEOPIXEL
+#define USE_ADAFRUIT_DOTSTAR
 
+#include "Arduino.h"
 #include "config.h"
 
-#include <Adafruit_NeoPixel.h>
 #include <ESP8266WiFi.h>
 
 enum Codes : uint8_t
@@ -18,7 +19,12 @@ enum Codes : uint8_t
 
 WiFiServer server(PORT);
 
+#ifdef USE_ADAFRUIT_NEOPIXEL
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_MODE);
+#endif
+#ifdef USE_ADAFRUIT_DOTSTAR
+Adafruit_DotStar strip = Adafruit_DotStar(LED_COUNT, LED_PIN, CLK_PIN, DOTSTAR_MONO);
+#endif
 
 void setup()
 {
@@ -135,8 +141,12 @@ void loop()
 						Serial.println();
 
 						index = data[0] << 8 | data[1];
-
+#ifdef USE_ADASTAR_NEOPIXEL
 						strip.setPixelColor(index, data[2], data[3], data[4], data[5]);
+#endif
+#ifdef USE_ADAFRUIT_DOTSTAR
+							strip.setPixelColor(index, data[0], data[1], data[2]);
+#endif
 						strip.show();
 					}
 					else if(code == Codes::SET_LEDS)
@@ -155,7 +165,12 @@ void loop()
 						{
 							client.read(data, 4);
 
+#ifdef USE_ADASTAR_NEOPIXEL
 							strip.setPixelColor(index, data[0], data[1], data[2], data[3]);
+#endif
+#ifdef USE_ADAFRUIT_DOTSTAR
+							strip.setPixelColor(index, data[0], data[1], data[2]);
+#endif
 						}
 
 						strip.show();

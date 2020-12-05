@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -60,17 +61,17 @@ namespace WirelessLedController.CLI
             if (cmd == "set" && cmds.Length == 3)
             {
               short index = Int16.Parse(cmds[1]);
-              UInt32 color = UInt32.Parse(cmds[2]);
+              UInt32 color = UInt32.Parse(cmds[2], NumberStyles.HexNumber);
               controller.SetLedColor(index, color);
             }
             else if (cmd == "brightness" && cmds.Length == 2)
             {
-              byte b = Byte.Parse(cmds[1]);
+              byte b = Byte.Parse(cmds[1], NumberStyles.HexNumber);
               controller.SetBrightness(b);
             }
             else if (cmd == "all" && cmds.Length == 2)
             {
-              UInt32 color = UInt32.Parse(cmds[1]);
+              UInt32 color = UInt32.Parse(cmds[1], NumberStyles.HexNumber);
               controller.SetLedColor(color);
             }
 
