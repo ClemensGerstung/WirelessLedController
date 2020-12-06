@@ -23,12 +23,12 @@ WiFiServer server(PORT);
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_MODE);
 #endif
 #ifdef USE_ADAFRUIT_DOTSTAR
-Adafruit_DotStar strip = Adafruit_DotStar(LED_COUNT, LED_PIN, CLK_PIN, DOTSTAR_MONO);
+Adafruit_DotStar strip = Adafruit_DotStar(LED_COUNT, LED_PIN, CLK_PIN, DOTSTAR_RGB);
 #endif
 
 void setup()
 {
-	Serial.begin(115200);
+	Serial.begin(9600);
 
 	WiFi.begin(SSID, PASSWORD);
 
@@ -41,10 +41,15 @@ void setup()
 	Serial.print("Connected to WiFi. IP: ");
 	Serial.println(WiFi.localIP());
 
-
 	server.begin();
 
 	strip.begin();
+
+	for(uint16_t index = 0; index < LED_COUNT; index++)
+	{
+		strip.setPixelColor(index, 0x00888888);
+	}
+	strip.show();
 }
 
 void loop()
@@ -145,7 +150,15 @@ void loop()
 						strip.setPixelColor(index, data[2], data[3], data[4], data[5]);
 #endif
 #ifdef USE_ADAFRUIT_DOTSTAR
-							strip.setPixelColor(index, data[0], data[1], data[2]);
+						// if client sent only six digit hex color
+						if(data[2] == 0x00)
+						{
+							data[2] = data[3];
+							data[3] = data[4];
+							data[4] = data[5];
+						}
+
+						strip.setPixelColor(index, data[2], data[3], data[4]);
 #endif
 						strip.show();
 					}
@@ -164,6 +177,14 @@ void loop()
 						for(uint16_t index = from; index <= to; index++)
 						{
 							client.read(data, 4);
+
+							// if client sent only six digit hex color
+							if (data[0] == 0x00)
+							{
+								data[0] = data[1];
+								data[1] = data[2];
+								data[2] = data[3];
+							}
 
 #ifdef USE_ADASTAR_NEOPIXEL
 							strip.setPixelColor(index, data[0], data[1], data[2], data[3]);
